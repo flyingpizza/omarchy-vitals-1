@@ -108,4 +108,15 @@ assert.ok(dualTooltip.indexOf("60%") >= 0, "Tooltip should show aggregate 60%")
 assert.strictEqual(M.metricWarned("gpu", dualSnap, 90, 85), false, "60% < 90% and 72 < 85")
 assert.strictEqual(M.metricWarned("gpu", dualSnap, 50, 85), true, "60% >= 50%")
 
+// Per-GPU warning: one hot card must warn even when the aggregate is below the threshold
+const hotSnap = M.parseSnapshot(JSON.stringify({
+  ok: true, cpu: { percent: 10 }, memory: { percent: 30 },
+  gpus: [
+    { name: "NVIDIA GeForce RTX 3080", percent: 10, tempC: 40, memUsedBytes: 1e9, memTotalBytes: 10e9 },
+    { name: "NVIDIA GeForce RTX 5070 Ti", percent: 95, tempC: 70, memUsedBytes: 8e9, memTotalBytes: 16e9 }
+  ],
+  disks: [], network: { rxBytes: 0, txBytes: 0, rxRate: 0, txRate: 0 }, temps: [], hottest: null
+}))
+assert.strictEqual(M.metricWarned("gpu", hotSnap, 90, 85), true, "one card at 95% must warn")
+
 console.log("model ok")

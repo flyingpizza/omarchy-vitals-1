@@ -178,11 +178,17 @@ function formatGpuUsed(gpu) {
 function metricWarned(kind, snapshot, warnPercent, warnTempC) {
   var cpu = snapshot && snapshot.cpu ? snapshot.cpu : {}
   var memory = snapshot && snapshot.memory ? snapshot.memory : {}
-  var gpu = aggregateGpu(snapshot)
   var disk = diskForMount(snapshot, "/")
   if (kind === "cpu") return Number(cpu.percent) >= warnPercent || Number(cpu.tempC) >= warnTempC
   if (kind === "memory") return Number(memory.percent) >= warnPercent
-  if (kind === "gpu") return !!(gpu && (Number(gpu.percent) >= warnPercent || Number(gpu.tempC) >= warnTempC))
+  if (kind === "gpu") {
+    var gpus = snapshot && snapshot.gpus ? snapshot.gpus : []
+    for (var gi = 0; gi < gpus.length; gi++) {
+      var g = gpus[gi] || {}
+      if (Number(g.percent) >= warnPercent || Number(g.tempC) >= warnTempC) return true
+    }
+    return false
+  }
   if (kind === "disk") return !!(disk && Number(disk.percent) >= warnPercent)
   if (kind === "temp") {
     var hottest = snapshot && snapshot.hottest ? snapshot.hottest.celsius : null
